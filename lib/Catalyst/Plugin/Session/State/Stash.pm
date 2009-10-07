@@ -1,36 +1,44 @@
 package Catalyst::Plugin::Session::State::Stash;
 use base qw/Catalyst::Plugin::Session::State Class::Accessor::Fast/;
 
+#Need to look up which version of perl is required.
+#use 5.008;
 use strict;
 use warnings;
 use MRO::Compat;
 
-our $VERSION = "0.10";
+our $VERSION = "0.11";
 
 BEGIN { __PACKAGE__->mk_accessors(qw/_deleted_session_id _prepared/) }
 
-sub _session_stash_key {
+sub _stash_key_components {
     my ($c) = @_;
-
-    $c->config->{session}->{stash_key};
+    my $config = $c->config->{'Plugin::Session'} || $c->config->{'session'};
+    return ($config->{stash_delim}) ?
+        split $config->{stash_delim}, $config->{stash_key} :
+        $config->{stash_key};
 }
 
 sub _get_session {
     my ($c) = @_;
-    
-    $c->stash->{$c->_session_stash_key};
+    # This turns the list of path components into a nested tree of hashrefs for obtaining info/storing in: 123/456 = {123}->{456}
+    my $ref = $c->stash;
+    $ref = ($ref->{$_} ||= {}) foreach $c->_stash_key_components;
+    $ref;
 }
 
 sub _set_session {
     my ( $c,$key,$value) = @_;
     
-    $c->stash->{$c->_session_stash_key}->{$key} = $value;
+    $c->_get_session->{$key} = $value;
 }
 
 sub setup_session {
     my $c = shift;
 
-    $c->config->{session}->{stash_key}
+    $c->config->{'Plugin::Session'} 
+        and return $c->config->{'Plugin::Session'}->{stash_key} |= '_session';
+    $c->config->{'session'}->{stash_key}
         ||= '_session';
 }
 
@@ -75,15 +83,14 @@ sub set_session_expires {
 sub delete_session_id {
     my ($c, $sid ) = @_;
     $c->_deleted_session_id(1);
-    undef $c->{stash}->{$c->_session_stash_key};
+    #Empty the tip
+    %{$c->_get_session} = ();
     $c->maybe::next::method($sid);
 }
 
 
 1;
 __END__
-
-=pod
 
 =head1 NAME
 
@@ -98,6 +105,9 @@ Catalyst::Plugin::Session::State::Stash - Maintain session IDs using the stash
 An alternative state storage plugin that allows you some more flexibility in
 dealing with session storage. This plugin loads and saves the session ID from
 and to the stash.
+
+Unless you know how to make good use of this, go use L<Catalyst::Plugin::Session::State::Cookie>
+instead. This module is only really appropriate for stateful webservices (which are generally bad).
 
 =head1 METHODS
 
@@ -149,6 +159,11 @@ Defaults the C<stash_key> parameter to C<_session>.
 
 The name of the hash key to use. Defaults to C<_session>.
 
+=item stash_delim
+
+If present, splits stash_key at this character to nest. E.g. delim of '/'
+and key of '123/456' will store it as $c->stash->{123}->{456}
+
 =item expires
     
 How long the session should last in seconds.
@@ -157,7 +172,7 @@ How long the session should last in seconds.
 
 For example, you could stick this in MyApp.pm:
 
-  __PACKAGE__->config( session => {
+  __PACKAGE__->config( 'Plugin::Session' => {
      stash_key  => 'session_id',
   });
 
@@ -173,7 +188,7 @@ Manual work may be involved to make better use of this.
 
 If you are writing a stateful web service with
 L<Catalyst::Plugin::Server::XMLRPC>, you will probably only have to deal with 
-loading, as when saving, the ID will already be on the stash.
+loading, as when saving, the ID will already be on the stash (and the stash is returned)
 
 =head1 SEE ALSO
 
@@ -187,8 +202,11 @@ James Laver E<lt>perl -e 'printf qw/%s@%s.com cpan jameslaver/'E<gt>
 =head1 CONTRIBUTORS
 
 This module is derived from L<Catalyst::Plugin::Session::State::Cookie> code.
-
 Thanks to anyone who wrote code for that.
+
+Thanks to Kent Fredric (KENTNL) for a patch for nested keys
+
+Thanks to Tom Doran (BOBTFISH) for updating the code to work and fit in better with new Catalysten.
 
 =head1 COPYRIGHT
 
@@ -196,5 +214,3 @@ This program is free software, you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =cut
-
-1;

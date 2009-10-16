@@ -1,9 +1,8 @@
 Build.PL
 Changes
 lib/Catalyst/Plugin/Session/State/Stash.pm
-Makefile.PL
-MANIFEST
-META.yml
+MANIFEST			This list of files
+MANIFEST.SKIP
 README
 t/01-use.t
 t/02-pod.t
@@ -12,3 +11,5 @@ t/04-basic.t
 t/05-live.t
 t/lib/TestApp.pm
 t/lib/TestApp/Controller/Root.pm
+Makefile.PL
+META.yml

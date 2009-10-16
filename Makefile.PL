@@ -5,7 +5,7 @@ WriteMakefile
           'NAME' => 'Catalyst::Plugin::Session::State::Stash',
           'VERSION_FROM' => 'lib/Catalyst/Plugin/Session/State/Stash.pm',
           'PREREQ_PM' => {
-                           'Catalyst::Plugin::Session::State' => 0,
+                           'Catalyst::Plugin::Session' => '0.27',
                            'Class::Accessor::Fast' => 0,
                            'MRO::Compat' => 0,
                            'Test::MockObject' => 0,

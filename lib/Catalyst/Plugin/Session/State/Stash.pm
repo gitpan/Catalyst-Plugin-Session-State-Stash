@@ -7,13 +7,13 @@ use strict;
 use warnings;
 use MRO::Compat;
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 
 BEGIN { __PACKAGE__->mk_accessors(qw/_deleted_session_id _prepared/) }
 
 sub _stash_key_components {
     my ($c) = @_;
-    my $config = $c->config->{'Plugin::Session'} || $c->config->{'session'};
+    my $config = $c->_session_plugin_config;
     return ($config->{stash_delim}) ?
         split $config->{stash_delim}, $config->{stash_key} :
         $config->{stash_key};
@@ -29,17 +29,12 @@ sub _get_session {
 
 sub _set_session {
     my ( $c,$key,$value) = @_;
-    
     $c->_get_session->{$key} = $value;
 }
 
 sub setup_session {
     my $c = shift;
-
-    $c->config->{'Plugin::Session'} 
-        and return $c->config->{'Plugin::Session'}->{stash_key} |= '_session';
-    $c->config->{'session'}->{stash_key}
-        ||= '_session';
+    $c->_session_plugin_config->{stash_key} ||= '_session';
 }
 
 sub prepare_action {
@@ -75,7 +70,6 @@ sub get_session_expires {
 
 sub set_session_expires {
     my ( $c, $expires ) = @_;
-    
     $c->_set_session(expires => time() + $expires);
     $c->maybe::next::method($expires)
 }
@@ -92,6 +86,8 @@ sub delete_session_id {
 1;
 __END__
 
+=pod
+
 =head1 NAME
 
 Catalyst::Plugin::Session::State::Stash - Maintain session IDs using the stash
@@ -105,9 +101,6 @@ Catalyst::Plugin::Session::State::Stash - Maintain session IDs using the stash
 An alternative state storage plugin that allows you some more flexibility in
 dealing with session storage. This plugin loads and saves the session ID from
 and to the stash.
-
-Unless you know how to make good use of this, go use L<Catalyst::Plugin::Session::State::Cookie>
-instead. This module is only really appropriate for stateful webservices (which are generally bad).
 
 =head1 METHODS
 
@@ -188,7 +181,7 @@ Manual work may be involved to make better use of this.
 
 If you are writing a stateful web service with
 L<Catalyst::Plugin::Server::XMLRPC>, you will probably only have to deal with 
-loading, as when saving, the ID will already be on the stash (and the stash is returned)
+loading, as when saving, the ID will already be on the stash.
 
 =head1 SEE ALSO
 
@@ -202,11 +195,10 @@ James Laver E<lt>perl -e 'printf qw/%s@%s.com cpan jameslaver/'E<gt>
 =head1 CONTRIBUTORS
 
 This module is derived from L<Catalyst::Plugin::Session::State::Cookie> code.
+
 Thanks to anyone who wrote code for that.
 
-Thanks to Kent Fredric (KENTNL) for a patch for nested keys
-
-Thanks to Tom Doran (BOBTFISH) for updating the code to work and fit in better with new Catalysten.
+Thanks to Kent Fredric for a patch for nested keys
 
 =head1 COPYRIGHT
 
@@ -214,3 +206,5 @@ This program is free software, you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =cut
+
+1;

@@ -17,12 +17,12 @@ requires:
   Class::Accessor::Fast: 0
   MRO::Compat: 0
 configure_requires:
-  Module::Build: 0.35
+  Module::Build: 0.34
 provides:
   Catalyst::Plugin::Session::State::Stash:
     file: lib/Catalyst/Plugin/Session/State/Stash.pm
     version: 0.12
-generated_by: Module::Build version 0.35
+generated_by: Module::Build version 0.34
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4

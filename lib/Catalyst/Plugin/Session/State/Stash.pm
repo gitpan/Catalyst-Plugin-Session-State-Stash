@@ -1,15 +1,15 @@
 package Catalyst::Plugin::Session::State::Stash;
-use base qw/Catalyst::Plugin::Session::State Class::Accessor::Fast/;
-
-#Need to look up which version of perl is required.
-#use 5.008;
-use strict;
-use warnings;
+use Moose;
+use 5.008;
 use MRO::Compat;
+use namespace::autoclean;
 
-our $VERSION = "0.12";
+extends 'Catalyst::Plugin::Session::State';
 
-BEGIN { __PACKAGE__->mk_accessors(qw/_deleted_session_id _prepared/) }
+our $VERSION = "0.13";
+
+has _deleted_session_id => ( is => 'rw' );
+has _prepared => ( is => 'rw' );
 
 sub _stash_key_components {
     my ($c) = @_;
@@ -158,7 +158,7 @@ If present, splits stash_key at this character to nest. E.g. delim of '/'
 and key of '123/456' will store it as $c->stash->{123}->{456}
 
 =item expires
-    
+
 How long the session should last in seconds.
 
 =back
@@ -180,7 +180,7 @@ is pretty low on my list of priorities.
 Manual work may be involved to make better use of this.
 
 If you are writing a stateful web service with
-L<Catalyst::Plugin::Server::XMLRPC>, you will probably only have to deal with 
+L<Catalyst::Plugin::Server::XMLRPC>, you will probably only have to deal with
 loading, as when saving, the ID will already be on the stash.
 
 =head1 SEE ALSO
@@ -207,4 +207,3 @@ under the same terms as Perl itself.
 
 =cut
 
-1;
